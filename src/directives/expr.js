@@ -1,11 +1,21 @@
-import { avalon } from '../seed/core'
+var update = require('./_update')
 
 avalon.directive('expr', {
-    update: function (vdom, value) {
-        value = (value == null || value === '') ? '\u200b' : value
-        vdom.nodeValue = value
-        //https://github.com/RubyLouvre/avalon/issues/1834
-        if(vdom.dom)
-           vdom.dom.data = value
+    parse: avalon.noop,
+    diff: function (copy, src) {
+        var copyValue = copy.nodeValue + ''
+        if (copy === src || copyValue !== src.nodeValue) {
+            src.nodeValue = copyValue
+            update(src, this.update)
+        }
+    },
+    update: function (dom, vdom) {
+        if (dom) {
+            dom.nodeValue = vdom.nodeValue
+        } else {
+            avalon.warn('[', vdom.nodeValue, ']找不到对应的文本节点赋值')
+        }
     }
 })
+
+

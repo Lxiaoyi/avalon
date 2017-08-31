@@ -1,3 +1,4 @@
+
 var eventFilters = {
     stop: function (e) {
         e.stopPropagation()
@@ -8,7 +9,7 @@ var eventFilters = {
         return e
     }
 }
-var keys = {
+var keyCode = {
     esc: 27,
     tab: 9,
     enter: 13,
@@ -19,16 +20,14 @@ var keys = {
     right: 39,
     down: 40
 }
-for (var name in keys) {
-    (function (filter, key) {
-        eventFilters[filter] = function (e) {
-            if (e.which !== key) {
-                e.$return = true
-            }
-            return e
+
+avalon.each(keyCode, function (name, keyCode) {
+    eventFilters[name] = function (e) {
+        if (e.which !== keyCode) {
+            e.$return = true
         }
-    })(name, keys[name])
-}
+        return e
+    }
+})
 
-
-export { eventFilters }
+module.exports = eventFilters

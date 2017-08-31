@@ -1,14 +1,16 @@
 
-/*******************************************************************
+/*********************************************************************
  *                          DOM Api                                 *
  *           shim,class,data,css,val,html,event,ready               *
- ********************************************************************/
+ **********************************************************************/
 
-import './shim/modern'
-import './class/modern'
-import './attr/modern'
-import './css/modern'
-import './val/modern'
-import './html/index'
-import './event/modern'
-import './ready/modern'
+require('./shim/modern')
+require('./class/modern')
+require('./attr/modern')
+require('./css/modern')
+require('./val/modern')
+require('./html/index')
+require('./event/modern')
+require('./ready/modern')
+
+module.exports = avalon

@@ -1,17 +1,24 @@
-import { document } from '../seed/core'
 
-export function VComment(text) {
-    this.nodeName = '#comment'
-    this.nodeValue = text
+function VComment(text) {
+    if (typeof text === 'string') {
+        this.type = '#comment'
+        this.nodeValue = text
+        this.skipContent = true
+        this.nodeType = 8
+    } else {
+        for (var i in text) {
+            this[i] = text[i]
+        }
+    }
 }
 VComment.prototype = {
     constructor: VComment,
-    toDOM: function() {
-        if (this.dom)
-            return this.dom
-        return this.dom = document.createComment(this.nodeValue)
+    toDOM: function () {
+        return document.createComment(this.nodeValue)
     },
-    toHTML: function() {
-        return '<!--' + this.nodeValue + '-->'
+    toHTML: function () {
+        return '<!--' + this.nodeValue + '-->'+(this.template||"")
     }
 }
+
+module.exports = VComment

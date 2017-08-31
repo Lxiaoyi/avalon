@@ -1,19 +1,14 @@
-import {avalon} from './seed/core'
-import './seed/lang.compact'
+
+var avalon = require('./seed/compact') //这个版本兼容IE6
+
+require('./filters/index')
+require('./vdom/compact')
+require('./dom/compact')
+require('./directives/compact')
+require('./strategy/index')
+avalon.onComponentDispose = require('./component/dispose.compact')
+require('./vmodel/compact')
+
+module.exports = avalon
 
 
-import './filters/index'
-import './dom/compact'
-
-import './vtree/fromString'
-import './vtree/fromDOM'
-
-import './vdom/compact'
-import './vmodel/compact'
-import './directives/compact'
-
-import './renders/domRender'
-
-import './effect/index'
-import './component/index'
-export default avalon

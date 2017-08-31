@@ -1,27 +1,29 @@
-import { avalon, inBrowser } from '../seed/core'
-
+//此指令实际上不会操作DOM,交由expr指令处理
+var update = require('./_update')
 
 avalon.directive('text', {
-    delay: true,
-    init: function () {
-        
-        var node = this.node
-        if (node.isVoidTag) {
-            avalon.error('自闭合元素不能使用ms-text')
+    parse: function (copy, src, binding) {
+        copy[binding.name] = 1
+        src.children = []
+        copy.children = '[{\nnodeType:3,\ntype:"#text",\ndynamic:true,' +
+                '\nnodeValue:avalon.parsers.string(' +
+                avalon.parseExpr(binding) + ')}]'
+    },
+    diff: function (copy, src) {
+        if(!src.children.length){
+           update(src, this.update)
         }
-        var child = { nodeName: '#text', nodeValue: this.getValue() }
-        node.children.splice(0, node.children.length, child)
-        if(inBrowser){
-           avalon.clearHTML(node.dom)
-           node.dom.appendChild( avalon.vdom(child,'toDOM'))
-        }
-        this.node = child
-        var type = 'expr'
-        this.type = this.name = type
-        var directive = avalon.directives[type]
-        var me = this
-        this.callback = function (value) {
-            directive.update.call(me, me.node, value)
+    },
+    update: function(dom, vdom){
+        if (dom && !vdom.isVoidTag ) {
+            var parent = dom
+            while (parent.firstChild) {
+                parent.removeChild(parent.firstChild)
+            }
+            var dom = document.createTextNode('x')
+            parent.appendChild(dom)
+            var a = {nodeType: 3, type:'#text', dom: dom}
+            vdom.children.push(a)
         }
     }
 })

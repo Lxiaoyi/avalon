@@ -1,40 +1,41 @@
 /**
- * 虚拟DOM的4大构造器
+ * 虚拟DOM的3大构造器
  */
-import { avalon, createFragment } from '../seed/core'
-import { VText } from './VText'
-import { VComment } from './VComment'
-import { VElement } from './VElement'
-import { VFragment } from './VFragment'
+var VText = require('./VText')
+var VComment = require('./VComment')
+var VElement = require('./VElement')
 
-
-avalon.mix(avalon, {
-    VText,
-    VComment,
-    VElement,
-    VFragment
-})
-
-var constNameMap = {
-    '#text': 'VText',
-    '#document-fragment': 'VFragment',
-    '#comment': 'VComment'
-}
-
-var vdom = avalon.vdomAdaptor = avalon.vdom = function(obj, method) {
-    if (!obj) { //obj在ms-for循环里面可能是null
-        return method === "toHTML" ? '' : createFragment()
+avalon.vdomAdaptor = function (obj, method) {
+    if (!obj) {//obj在ms-for循环里面可能是null
+        return (method === "toHTML" ? '' :
+            avalon.avalonFragment.cloneNode(false))
     }
-    var nodeName = obj.nodeName
-    if (!nodeName) {
-        return (new avalon.VFragment(obj))[method]()
+    switch (obj.nodeType) {
+        case 3:
+            return VText.prototype[method].call(obj)
+        case 8:
+            return VComment.prototype[method].call(obj)
+        case 1:
+            return VElement.prototype[method].call(obj)
+        default:
+            if (Array.isArray(obj)) {
+                if (method === "toHTML") {
+                    return obj.map(function (a) {
+                        return avalon.vdomAdaptor(a, 'toHTML')
+                    }).join('')
+                } else {
+                    var f = avalon.avalonFragment.cloneNode(false)
+                    obj.forEach(function (a) {
+                        f.appendChild(avalon.vdomAdaptor(a, 'toDOM'))
+                    })
+                    return f
+                }
+            }
     }
-    var constName = constNameMap[nodeName] || 'VElement'
-    return avalon[constName].prototype[method].call(obj)
 }
 
-avalon.domize = function(a) {
-    return avalon.vdom(a, 'toDOM')
+module.exports = {
+    VText: VText,
+    VComment: VComment,
+    VElement: VElement
 }
-
-export { vdom, avalon, VText, VComment, VElement, VFragment }

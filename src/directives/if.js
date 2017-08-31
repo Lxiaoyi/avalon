@@ -1,56 +1,49 @@
-import { avalon, createAnchor } from '../seed/core'
-
+var update = require('./_update')
+//ms-imporant ms-controller ms-for ms-widget ms-effect ms-if   ...
 avalon.directive('if', {
-    delay: true,
-    priority: 5,
-    init: function() {
-        this.placeholder = createAnchor('if')
-        var props = this.node.props
-        delete props['ms-if']
-        delete props[':if']
-        this.fragment = avalon.vdom(this.node, 'toHTML')
-    },
-    diff: function(newVal, oldVal) {
-        var n = !!newVal
-        if (oldVal === void 0 || n !== oldVal) {
-            this.value = n
-            return true
+    priority: 6,
+    diff: function (copy, src, name) {
+        var c = !!copy[name]
+        if (!c) {
+            copy.nodeType = 8
+            copy.order = '' //不再执行子孙节点的操作
         }
-    },
-    update: function(vdom, value) {
-        if (this.isShow === void 0 && value) {
-            continueScan(this, vdom)
-            return
-        }
-        this.isShow = value
-        var placeholder = this.placeholder
-
-        if (value) {
-            var p = placeholder.parentNode
-            continueScan(this, vdom)
-            p && p.replaceChild(vdom.dom, placeholder)
-        } else { //移除DOM
-            this.beforeDispose()
-            vdom.nodeValue = 'if'
-            vdom.nodeName = '#comment'
-            delete vdom.children
-            var dom = vdom.dom
-            var p = dom && dom.parentNode
-            vdom.dom = placeholder
-            if (p) {
-                p.replaceChild(placeholder, dom)
+        if (copy === src || c !== src[name]) {
+            src[name] = c
+            if (c && src.nodeType === 1) {
+                return
             }
+            update(src, this.update)
         }
     },
-    beforeDispose: function(){
-        if (this.innerRender) {
-            this.innerRender.dispose()
+    update: function (dom, vdom, parent) {
+        var show = vdom['ms-if']
+        if (show) {
+            //要移除元素节点,在对应位置上插入注释节点
+            vdom.nodeType = 1
+            vdom.nodeValue = null
+            var comment = vdom.comment
+            parent = comment.parentNode
+            parent.replaceChild(dom, comment)
+            avalon.applyEffect(dom, vdom, {
+                hook: 'onEnterDone'
+            })
+        } else {
+
+            avalon.applyEffect(dom, vdom, {
+                hook: 'onLeaveDone',
+                cb: function () {
+                    var comment = document.createComment('ms-if')
+                    //去掉注释节点临时添加的ms-effect
+                    //https://github.com/RubyLouvre/avalon/issues/1577
+                    //这里必须设置nodeValue为ms-if,否则会在节点对齐算法中出现乱删节点的BUG
+                    vdom.nodeValue = 'ms-if'
+                    parent.replaceChild(comment, dom)
+                    vdom.nodeType = 8
+                    vdom.comment = comment
+                }
+            })
         }
     }
 })
 
-function continueScan(instance, vdom) {
-    var innerRender = instance.innerRender = avalon.scan(instance.fragment, instance.vm)
-    avalon.shadowCopy(vdom, innerRender.root)
-    delete vdom.nodeValue
-}

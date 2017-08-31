@@ -1,11 +1,15 @@
-import { avalon, isObject, platform} from '../seed/core'
-
 avalon.directive('rules', {
-    diff: function (rules) {
-        if (isObject(rules)) {
-            var vdom = this.node
-            vdom.rules = platform.toJson(rules)
-            return true
+    parse: function (copy, src, binding) {
+        var rules = binding.expr
+        if (/{.+}/.test(rules)) {
+            copy[binding.name] = avalon.parseExpr(binding)
+        }
+    },
+    diff: function (copy, src, name) {
+        src[name] = copy[name]
+        var field = src.dom && src.dom.__ms_duplex__
+        if (field) {
+            field.rules = copy[name]
         }
     }
 })
@@ -27,12 +31,11 @@ function isCorrectDate(value) {
     }
     return false
 }
-//https://github.com/adform/validator.js/blob/master/validator.js
 avalon.shadowCopy(avalon.validators, {
     pattern: {
         message: '必须匹配{{pattern}}这样的格式',
         get: function (value, field, next) {
-            var elem = field.dom
+            var elem = field.element
             var data = field.data
             if (!isRegExp(data.pattern)) {
                 var h5pattern = elem.getAttribute("pattern")
@@ -52,21 +55,14 @@ avalon.shadowCopy(avalon.validators, {
     number: {
         message: '必须数字',
         get: function (value, field, next) {//数值
-            next(!!value && isFinite(value))// isFinite('') --> true
-            return value
-        }
-    },
-    norequired: {
-        message: '',
-        get: function (value, field, next) {
-            next(true)
+            next(isFinite(value))
             return value
         }
     },
     required: {
         message: '必须填写',
         get: function (value, field, next) {
-            next(value !== '')
+            next(value !== "")
             return value
         }
     },
@@ -83,7 +79,7 @@ avalon.shadowCopy(avalon.validators, {
         message: '日期格式不正确',
         get: function (value, field, next) {
             var data = field.data
-            if (isRegExp(data.date)) {
+            if (avalon.type(data.date) === 'regexp') {
                 next(data.date.test(value))
             } else {
                 next(isCorrectDate(value))

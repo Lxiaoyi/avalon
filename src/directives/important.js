@@ -1,30 +1,28 @@
-import { avalon } from '../seed/core'
+// 抽离出来公用
+var update = require('./_update')
 
-var impDir = avalon.directive('important', {
+avalon.directive('important', {
     priority: 1,
-    getScope: function(name, scope) {
-        var v = avalon.vmodels[name]
-        if (v)
-            return v
-        throw 'error! no vmodel called ' + name
+    parse: function (copy, src, binding) {
+        var quoted = avalon.quote(binding.expr)
+        copy[binding.name] = quoted
+        copy.local = '{}'
+        copy.vmodel = '(function(){ return __vmodel__ = avalon.vmodels[' + quoted + ']})()'
+        src.$prepend = ['(function(__vmodel__){',
+            'var important = avalon.scopes[' + quoted + ']',
+            'if(important){avalon.log("不进入"+' + quoted + ');return }',
+        ].join('\n') + '\n'
+        src.$append = '\n})();'
     },
-    update: function(node, attrName, $id) {
-        if (!avalon.inBrowser)
-            return
-        var dom = avalon.vdom(node, 'toDOM')
-        if (dom.nodeType === 1) {
-            dom.removeAttribute(attrName)
-            avalon(dom).removeClass('ms-controller')
+    diff: function (copy, src, name) {
+        if (copy === src || src.vmodel !== copy.vmodel) {
+            src['ms-controller'] = copy[name]
+            src.local = copy.local
+            src.vmodel = copy.vmodel
+            update(src, this.update)
         }
-        var vm = avalon.vmodels[$id]
-        if(vm){
-           vm.$element = dom
-           vm.$render = this
-           vm.$fire('onReady')
-           delete vm.$events.onReady
-        }
-       
+    },
+    update: function (dom, vdom, parent) {
+        avalon.directives.controller.update(dom, vdom, parent, 'important')
     }
 })
-
-export var impCb = impDir.update

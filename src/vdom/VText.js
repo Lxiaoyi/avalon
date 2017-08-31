@@ -1,20 +1,27 @@
-import { avalon, document } from '../seed/core'
-
-export function VText(text) {
-    this.nodeName = '#text'
-    this.nodeValue = text
+var rexpr = avalon.config.rexpr
+var decode = require('../strategy/decode')
+function VText(text) {
+    if (typeof text === 'string') {
+        this.type = '#text'
+        this.nodeValue = text
+        this.skipContent = !rexpr.test(text)
+        this.nodeType = 3
+    } else {
+        for (var i in text) {
+            this[i] = text[i]
+        }
+    }
 }
 
 VText.prototype = {
     constructor: VText,
-    toDOM() {
-        /* istanbul ignore if*/
-        if (this.dom)
-            return this.dom
-        var v = avalon._decode(this.nodeValue)
-        return this.dom = document.createTextNode(v)
+    toDOM: function () {
+       var v = decode(this.nodeValue)
+       return document.createTextNode(v)
     },
-    toHTML() {
+    toHTML: function () {
         return this.nodeValue
     }
 }
+
+module.exports = VText

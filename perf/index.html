@@ -32,8 +32,7 @@
             var array = []
             var id = setInterval(function () {
                 var t1 = Date.now()
-                vm.list = genData(500)
-                
+                vm.list = genData(1000)
                 var cost = Date.now() - t1
                 array.push(cost)
 
@@ -48,7 +47,7 @@
                     }, 0) / array.length, 'ms')
                     clearInterval(id)
                 }
-            }, 100)
+            }, 50)
 
         </script>
     </head>
@@ -60,8 +59,7 @@
             <table border="1">
                 <tr><th ms-for='el in @header'>{{el}}</th></tr>
                 <tr ms-for='tr in @list'>
-                    <td ms-for="td in tr | selectBy(['name','age','sex'])" 
-                        ms-attr="{align:td === 'age' ?'left':'right'}">{{td}}</td>
+                    <td ms-for='td in tr | selectBy(["name","age","sex"])' ms-attr="{align:td === 'age' ?'left':'right'}">{{td}}</td>
                 </tr>
             </table>
         </div>

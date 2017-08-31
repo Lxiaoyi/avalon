@@ -9,15 +9,7 @@
                 return fn.toString().replace(/^[^\/]+\/\*!?\s?/, '').
                         replace(/\*\/[^\/]+$/, '').trim().replace(/>\s*</g, '><')
             }
-            var expect = function (a) {
-                return {
-                    to: {
-                        equal: function (b) {
-                            console.log(a, b, a === b)
-                        }
-                    }
-                }
-            }
+           
             avalon.component('ms-select', {
                 template: heredoc(function () {
                     /*
@@ -38,8 +30,8 @@
                     onReady: function () {
                         console.log('onReady')
                     },
-                    onViewChange: function (e) {
-                        console.log('onViewChange', e.is)
+                    onViewChange: function () {
+                        console.log('onViewChange')
                     },
                     onDispose: function () {
                         console.log('onDispose')
@@ -57,8 +49,8 @@
                 dd: '22',
                 cc: "555",
                 click: function () {
-                   vm.$render.dispose()
-                   avalon.clearHTML(document.body)
+                    console.log('---')
+                    avalon.clearHTML(document.body)
                 }
             })
 
@@ -68,7 +60,7 @@
     <body ms-controller="test">
         <h1>{{@aaa}}</h1>
         <p>onViewChange是比较组件的先后innerHTML,不一样才会触发</p>
-        <wbr ms-widget="{is:'ms-section',id:'eee'}"/>
+        <wbr ms-widget="{is:'ms-section'}"/>
         <!--111-->
         <button ms-click="@click" type="button">点我删除</button>
     </body>
